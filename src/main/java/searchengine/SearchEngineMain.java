@@ -40,6 +40,13 @@ public class SearchEngineMain {
                 SearchShell.fromSecondary(Paths.get(rest[0]), Paths.get(rest[1]),
                         Paths.get(rest[2]), Integer.parseInt(rest[3])).run();
                 break;
+            case "web":
+                if (rest.length < 3 || rest.length > 4) {
+                    System.err.println("Usage: java -jar search-engine.jar web <indexFile> <filteredFile> <topK> [port]");
+                    System.exit(1);
+                }
+                SearchWebServer.main(rest);
+                break;
             default:
                 usage();
                 System.exit(1);
@@ -54,6 +61,7 @@ public class SearchEngineMain {
         System.err.println("  buildSecondary <indexFile> <secondaryIndexFile>");
         System.err.println("  shell <indexFile> <filteredFile> <topK>");
         System.err.println("  shell2 <indexFile> <secondaryFile> <filteredFile> <topK>");
+        System.err.println("  web <indexFile> <filteredFile> <topK> [port]");
         System.err.println("Hadoop three-stage jobs:");
         System.err.println("  hadoop jar search-engine.jar searchengine.FilterJob <rawDataInput> <filteredOutput>");
         System.err.println("  hadoop jar search-engine.jar searchengine.PostingJob <filteredInput> <postingOutput>");

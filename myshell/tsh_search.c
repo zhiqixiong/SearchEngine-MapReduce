@@ -300,7 +300,9 @@ void search_help(void)
     printf("  secrawl [N]         run crawler and generate rawData, default N=40\n");
     printf("  sebuild [N]         build local index from crawler rawData\n");
     printf("  seshell [K]         start Java SearchShell, default K=10\n");
-    printf("  sehadoop [N] [K]    crawler + Hadoop 3-stage index jobs\n");
+    printf("  sehadoop [N] [K]    fixed corpus + Hadoop 3-stage index jobs\n");
+    printf("  sewebbuild [N] [K]  generate self-host HTML corpus, crawl it, then build Hadoop index\n");
+    printf("  seweb [K] [PORT]    start Web search service, default PORT=8080\n");
     printf("  sefixed             build local index from fixed data/ostep corpus\n");
     printf("  seclean             clean generated outputs\n");
     printf("You can append & to run any long task in background, then use jobs/fg/bg.\n");
@@ -332,6 +334,14 @@ int rewrite_search_alias(char **argv)
         argv[0] = "./scripts_myshell/run_hadoop_index.sh";
         return 1;
     }
+    if (!strcmp(argv[0], "sewebbuild")) {
+        argv[0] = "./scripts_myshell/build_web_corpus.sh";
+        return 1;
+    }
+    if (!strcmp(argv[0], "seweb")) {
+        argv[0] = "./scripts_myshell/start_web.sh";
+        return 1;
+    }
     if (!strcmp(argv[0], "sefixed")) {
         argv[0] = "./scripts_myshell/build_fixed_local.sh";
         return 1;
@@ -354,7 +364,7 @@ int builtin_cmd(char **argv)
     if (argv[0] == NULL)
         return 1;
 
-    if (!strcmp(argv[0], "quit"))
+    if (!strcmp(argv[0], "quit") || !strcmp(argv[0], "exit") || !strcmp(argv[0], "q") || !strcmp(argv[0], "Q"))
         exit(0);
 
     if (!strcmp(argv[0], "sehelp")) {

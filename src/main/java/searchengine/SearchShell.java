@@ -20,6 +20,7 @@ public class SearchShell {
 
     private final Path indexPath;
     private final Map<String, Long> secondaryIndex;
+    private final SearchQueryService queryService;
 
     public SearchShell(Map<String, List<Posting>> indexMap, Map<Integer, Document> documents, int topK) {
         this.indexMap = indexMap;
@@ -27,6 +28,7 @@ public class SearchShell {
         this.topK = topK;
         this.indexPath = null;
         this.secondaryIndex = null;
+        this.queryService = new SearchQueryService(indexMap, documents);
     }
 
     public SearchShell(Path indexPath, Map<String, Long> secondaryIndex,
@@ -36,6 +38,7 @@ public class SearchShell {
         this.topK = topK;
         this.indexPath = indexPath;
         this.secondaryIndex = secondaryIndex;
+        this.queryService = null;
     }
 
     public static void main(String[] args) throws Exception {
@@ -73,7 +76,7 @@ public class SearchShell {
 
     public void run() throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("Mini Search Engine. Type a term, or exit.");
+        System.out.println("Mini Search Engine. Type a term / multi-term query, or exit.");
         while (true) {
             System.out.print("search> ");
             String line = reader.readLine();
@@ -81,7 +84,7 @@ public class SearchShell {
                 break;
             }
             String query = line.trim();
-            if ("exit".equalsIgnoreCase(query) || "quit".equalsIgnoreCase(query)) {
+            if ("exit".equalsIgnoreCase(query) || "quit".equalsIgnoreCase(query) || "q".equalsIgnoreCase(query)) {
                 break;
             }
             if (query.isEmpty()) {
@@ -92,6 +95,25 @@ public class SearchShell {
     }
 
     public void search(String query) throws Exception {
+        if (queryService != null) {
+            List<SearchResult> results = queryService.search(query, topK);
+            if (results.isEmpty()) {
+                System.out.println("No result found.");
+                return;
+            }
+            for (int i = 0; i < results.size(); i++) {
+                SearchResult result = results.get(i);
+                System.out.println("[" + (i + 1) + "] " + result.getFilename());
+                System.out.printf("score: %.6f%n", result.getScore());
+                System.out.println("positions: " + result.getPositions().stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(", ")));
+                System.out.println("summary: " + result.getSummary());
+                System.out.println();
+            }
+            return;
+        }
+
         String term = cleaner.cleanQueryTerm(query);
         if (term.isEmpty()) {
             System.out.println("No result found.");
