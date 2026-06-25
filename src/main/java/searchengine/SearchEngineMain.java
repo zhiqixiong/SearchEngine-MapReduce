@@ -19,6 +19,9 @@ public class SearchEngineMain {
             case "local":
                 LocalPipeline.main(rest);
                 break;
+            case "rawlocal":
+                RawDataPipeline.main(rest);
+                break;
             case "buildSecondary":
                 SecondaryIndexBuilder.main(rest);
                 break;
@@ -47,6 +50,7 @@ public class SearchEngineMain {
         System.err.println("Commands:");
         System.err.println("  prepare <inputDir> <outputFile>");
         System.err.println("  local <inputDir> <outputDir>");
+        System.err.println("  rawlocal <rawDataFile> <outputDir>");
         System.err.println("  buildSecondary <indexFile> <secondaryIndexFile>");
         System.err.println("  shell <indexFile> <filteredFile> <topK>");
         System.err.println("  shell2 <indexFile> <secondaryFile> <filteredFile> <topK>");

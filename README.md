@@ -1,125 +1,72 @@
 # SearchEngine-MapReduce
 
-基于 Hadoop MapReduce 的简化全文搜索引擎。项目主线是：
+本项目是《云计算与虚拟化技术》课程实验：基于 Hadoop MapReduce 构建一个简易全文搜索引擎，并融合三个部分：
+
+1. **爬虫系统**：自动采集网页/技术文档，输出统一的 `rawData`。
+2. **Hadoop/MapReduce 索引系统**：在 HDFS 上完成文本过滤和倒排索引构建。
+3. **myShell 总控制台**：复用 Unix 实验中的作业控制 Shell，用来启动和管理爬虫、索引构建和查询任务。
+
+核心思想：
 
 ```text
-rawData -> filteredSourceFile -> invertedIndexFile -> secondaryIndex -> SearchShell
+crawler / fixed corpus
+        -> rawData
+        -> filteredSourceFile
+        -> invertedIndexFile
+        -> secondaryIndexFile
+        -> SearchShell query
 ```
 
-核心目标不是做复杂网页系统，而是用云计算课程中的分布式存储、并行计算、Shuffle 聚合和倒排索引思想，实现一个可以查询英文关键词的搜索引擎原型。
-
-## 1. 项目结构
+## 1. 目录结构
 
 ```text
 SearchEngine-MapReduce/
 ├── data/
-│   ├── ostep/                  # 8 篇输入文档，可替换为真正 OSTEP txt
-│   ├── stopwords.txt
-│   └── mock/
+│   ├── ostep/                  # 固定小语料，用于本地调试
+│   ├── mock/                   # 模块测试用 mock 数据
+│   └── stopwords.txt
+├── tools/crawler/
+│   ├── enhanced_crawler.py     # 爬虫：输出 rawData 格式
+│   └── requirements.txt
 ├── src/main/java/searchengine/
-│   ├── PrepareRawData.java
-│   ├── FilterJob.java
-│   ├── InvertedIndexJob.java
-│   ├── SecondaryIndexBuilder.java
-│   ├── SearchShell.java
-│   ├── TextCleaner.java
-│   ├── StopWords.java
-│   └── LocalPipeline.java
+│   ├── FilterJob.java          # Hadoop map-only 清洗任务
+│   ├── InvertedIndexJob.java   # Hadoop 倒排索引任务
+│   ├── RawDataPipeline.java    # 本地从 rawData 建索引
+│   ├── LocalPipeline.java      # 本地从 data/ostep 建索引
+│   └── SearchShell.java        # 查询终端
 ├── scripts/
-│   ├── init_hdfs.sh
-│   ├── run_filter.sh
-│   ├── run_index.sh
-│   ├── run_shell.sh
-│   ├── run_all.sh
-│   └── run_local_demo.sh
-└── pom.xml
+│   ├── run_all.sh              # 固定语料 Hadoop 流程
+│   ├── run_crawler_local.sh    # 爬虫 + 本地建索引
+│   └── run_crawler_hadoop.sh   # 爬虫 + Hadoop 建索引
+├── myshell/
+│   ├── tsh_filled.c            # 原始 myShell 实现
+│   └── tsh_search.c            # 增强版：加入搜索引擎快捷命令
+└── scripts_myshell/            # 给 myShell 调用的脚本
 ```
 
-## 2. 统一文件格式
-
-### rawData
-
-HDFS 路径：
-
-```text
-/search/rawData
-```
-
-格式：
-
-```text
-DID\tFILENAME\tCONTENT
-```
-
-一篇文档必须占一行。
-
-### filteredSourceFile
-
-HDFS 路径：
-
-```text
-/search/filtered
-```
-
-格式：
-
-```text
-DID\tFILENAME\ttoken1 token2 token3 ...
-```
-
-`position` 统一使用过滤后 token 序列中的下标。
-
-### invertedIndexFile
-
-HDFS 路径：
-
-```text
-/search/index
-```
-
-格式：
-
-```text
-TERM\tDID:rank:pos1,pos2,pos3;DID:rank:pos1,pos2,pos3
-```
-
-`rank = TF * IDF`，其中：
-
-```text
-TF = term 在该文档中的出现次数 / 该文档 token 总数
-IDF = log((N + 1) / (df + 1)) + 1
-```
-
-## 3. Hadoop 运行方式
-
-检查环境：
+## 2. Maven 编译
 
 ```bash
-java -version
-mvn -version
-hadoop version
+mvn clean package -DskipTests
 ```
 
-一键运行：
+生成：
 
-```bash
-bash scripts/run_all.sh
+```text
+target/search-engine-1.0.0.jar
 ```
 
-运行完成后启动查询：
+## 3. 本地固定语料调试
 
 ```bash
-java -jar target/search-engine-1.0.0.jar shell \
-  output/local/invertedIndex.txt \
-  output/local/filteredSourceFile.txt \
-  2
+java -jar target/search-engine-1.0.0.jar local data/ostep output/local
+java -jar target/search-engine-1.0.0.jar shell output/local/invertedIndex.txt output/local/filteredSourceFile.txt 2
 ```
 
 测试词：
 
 ```text
 schedule
-scheduling
 mlfq
 memory
 file
@@ -127,89 +74,103 @@ inode
 exit
 ```
 
-## 4. 分阶段运行
+## 4. 爬虫 + 本地建索引
 
-生成 rawData：
-
-```bash
-mvn clean package -DskipTests
-java -cp target/search-engine-1.0.0.jar searchengine.PrepareRawData data/ostep output/rawData.txt
-hdfs dfs -rm -r -f /search/rawData
-hdfs dfs -mkdir -p /search/rawData
-hdfs dfs -put output/rawData.txt /search/rawData/
-```
-
-运行过滤 Job：
+安装 Python 依赖：
 
 ```bash
-bash scripts/run_filter.sh
+pip3 install -r tools/crawler/requirements.txt
 ```
 
-运行倒排索引 Job：
+运行：
 
 ```bash
-bash scripts/run_index.sh 8
+bash scripts/run_crawler_local.sh 40 10
+java -jar target/search-engine-1.0.0.jar shell output/crawler/local/invertedIndex.txt output/crawler/local/filteredSourceFile.txt 10
 ```
 
-拉取结果并查询：
+如果网络不稳定，可只用内置样本文档生成 rawData：
 
 ```bash
-bash scripts/run_shell.sh 2
+python3 tools/crawler/enhanced_crawler.py --sample-only --target 8 --output output/crawler/crawler_rawData.txt
+java -jar target/search-engine-1.0.0.jar rawlocal output/crawler/crawler_rawData.txt output/crawler/local
 ```
 
-## 5. 本地自测方式
-
-如果当前机器没有 Hadoop 和 Maven，可以先跑本地 demo：
+## 5. 爬虫 + Hadoop 正式流程
 
 ```bash
-bash scripts/run_local_demo.sh
+bash scripts/run_crawler_hadoop.sh 40 10
+java -jar target/search-engine-1.0.0.jar shell output/crawler/hadoop/invertedIndex.txt output/crawler/hadoop/filteredSourceFile.txt 10
 ```
 
-然后查询：
-
-```bash
-java -cp target/classes searchengine.SearchEngineMain shell \
-  output/local/invertedIndex.txt \
-  output/local/filteredSourceFile.txt \
-  2
-```
-
-注意：本地 demo 只是为了验证算法和 Shell，最终课程演示仍建议用 Hadoop MapReduce 脚本。
-
-## 6. 验收命令
-
-查看 rawData 行数：
-
-```bash
-hdfs dfs -cat /search/rawData/rawData.txt | wc -l
-```
-
-预期：
+这个流程会执行：
 
 ```text
-8
+crawler -> rawData -> HDFS /search/rawData
+        -> Hadoop FilterJob -> HDFS /search/filtered
+        -> Hadoop InvertedIndexJob -> HDFS /search/index
+        -> getmerge -> SearchShell
 ```
 
-查看 filtered：
+## 6. myShell 融合方式
+
+在 Linux / WSL / 云主机上编译增强版 myShell：
 
 ```bash
-hdfs dfs -cat /search/filtered/part-* | head -3
+bash scripts_myshell/compile_myshell.sh
+./myshell/tsh_search
 ```
 
-查看倒排索引：
+进入 `search-tsh>` 后可以使用：
 
-```bash
-hdfs dfs -cat /search/index/part-* | grep '^schedule'
-hdfs dfs -cat /search/index/part-* | grep '^memory'
-hdfs dfs -cat /search/index/part-* | grep '^file'
-hdfs dfs -cat /search/index/part-* | grep '^inode'
+```text
+sehelp                    显示搜索引擎快捷命令
+secrawl 40                运行爬虫，生成 output/crawler/crawler_rawData.txt
+sebuild 40                基于爬虫 rawData 本地建索引
+seshell 10                启动 Java SearchShell，TopK=10
+sehadoop 40 10            爬虫 + Hadoop FilterJob + InvertedIndexJob
+sefixed                   使用固定 data/ostep 语料本地建索引
+seclean                   清理输出
+jobs                      查看 myShell 后台任务
+fg %1 / bg %1             前后台切换任务
 ```
 
-## 7. 汇报时的技术重点
+示例：
 
-1. `PrepareRawData` 把多文件语料整理成 Hadoop 友好的一行一文档格式。
-2. `FilterJob` 是 map-only 任务，体现按文档并行清洗。
-3. `InvertedIndexJob` 的 Mapper 做文档内局部统计，Reducer 通过 Shuffle 得到同一个 term 的全局 posting list。
-4. `rank` 使用 TF-IDF，既考虑词在文档中的频率，也考虑词在全局语料中的区分度。
-5. `SecondaryIndexBuilder` 用 `term -> offset` 避免每次查询扫描完整倒排索引。
-6. `SearchShell` 根据 positions 从 filtered token 序列截取摘要，保证摘要和索引位置一致。
+```text
+search-tsh> secrawl 40 &
+search-tsh> jobs
+search-tsh> fg %1
+search-tsh> sebuild 40
+search-tsh> seshell 10
+```
+
+这样 myShell 不只是摆设：它作为外层实验控制台，真正管理爬虫和索引构建这类长任务。
+
+## 7. 文件格式
+
+### rawData
+
+```text
+DID<TAB>URL_OR_FILENAME<TAB>CONTENT
+```
+
+### filteredSourceFile
+
+```text
+DID<TAB>URL_OR_FILENAME<TAB>token1 token2 token3 ...
+```
+
+### invertedIndexFile
+
+```text
+TERM<TAB>DID:rank:pos1,pos2,pos3;DID:rank:pos1,pos2,pos3
+```
+
+## 8. 汇报重点
+
+- 爬虫解决“原始数据从哪里来”。
+- HDFS 存储 rawData、filteredSourceFile、invertedIndexFile。
+- MapReduce 负责离线索引构建，不负责每次用户查询。
+- SearchShell 负责在线查询。
+- myShell 负责实验任务调度和作业控制，复用 `jobs/fg/bg/SIGCHLD` 机制管理长任务。
