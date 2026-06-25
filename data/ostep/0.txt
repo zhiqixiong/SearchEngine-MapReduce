@@ -1,0 +1,1 @@
+Scheduling Introduction. By now low level mechanisms for running processes and context switching should be clear. The scheduler decides which process should run next. A good schedule improves turnaround time and response time. Scheduling policy is the main topic.

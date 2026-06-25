@@ -1,0 +1,1 @@
+File System Implementation. A file is represented by an inode. The inode stores file metadata and pointers to data blocks. Directory entries map file names to inode numbers.

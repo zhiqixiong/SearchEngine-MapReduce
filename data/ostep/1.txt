@@ -1,0 +1,1 @@
+Scheduling Policies. First in first out, shortest job first, and shortest time to completion first are classic scheduling policies. A schedule should match the workload and reduce waiting time.

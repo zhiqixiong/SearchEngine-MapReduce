@@ -1,0 +1,1 @@
+Paging. The system divides memory into pages and page frames. Page tables record address translation. Paging allows flexible memory allocation and avoids external fragmentation.

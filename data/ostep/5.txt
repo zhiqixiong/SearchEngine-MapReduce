@@ -1,0 +1,1 @@
+Address Translation. The memory management unit translates virtual addresses. TLB entries cache recent page table translations. Memory protection depends on valid bits and permission bits.

@@ -1,0 +1,1 @@
+Memory Virtualization. Each process sees an address space. The operating system maps virtual memory to physical memory and protects one process from another process.

@@ -1,0 +1,1 @@
+Fast File System. The file system places related inode blocks and data blocks close together. Better locality improves file read performance and reduces disk seeks.
