@@ -14,17 +14,20 @@ public class RawDataPipeline {
 
     public static void run(Path rawDataFile, Path outputDir) throws Exception {
         Path filtered = outputDir.resolve("filteredSourceFile.txt");
+        Path postings = outputDir.resolve("postingFile.txt");
         Path index = outputDir.resolve("invertedIndex.txt");
         Path secondary = outputDir.resolve("secondaryIndex.txt");
 
         LocalFilter.filter(rawDataFile, filtered);
+        PostingCore.build(filtered, postings);
         int docCount = countLines(rawDataFile);
-        InvertedIndexCore.build(filtered, index, docCount);
+        RankIndexCore.build(postings, index, docCount);
         SecondaryIndexBuilder.build(index, secondary);
 
         System.out.println("[Done] rawData pipeline generated:");
         System.out.println("rawData=" + rawDataFile);
         System.out.println(filtered);
+        System.out.println(postings);
         System.out.println(index);
         System.out.println(secondary);
     }

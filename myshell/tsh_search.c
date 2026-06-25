@@ -300,7 +300,7 @@ void search_help(void)
     printf("  secrawl [N]         run crawler and generate rawData, default N=40\n");
     printf("  sebuild [N]         build local index from crawler rawData\n");
     printf("  seshell [K]         start Java SearchShell, default K=10\n");
-    printf("  sehadoop [N] [K]    crawler + Hadoop FilterJob + InvertedIndexJob\n");
+    printf("  sehadoop [N] [K]    crawler + Hadoop 3-stage index jobs\n");
     printf("  sefixed             build local index from fixed data/ostep corpus\n");
     printf("  seclean             clean generated outputs\n");
     printf("You can append & to run any long task in background, then use jobs/fg/bg.\n");

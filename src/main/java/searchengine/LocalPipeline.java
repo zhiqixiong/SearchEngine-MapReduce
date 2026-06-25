@@ -15,18 +15,21 @@ public class LocalPipeline {
     public static void run(Path inputDir, Path outputDir) throws Exception {
         Path rawData = outputDir.resolve("rawData.txt");
         Path filtered = outputDir.resolve("filteredSourceFile.txt");
+        Path postings = outputDir.resolve("postingFile.txt");
         Path index = outputDir.resolve("invertedIndex.txt");
         Path secondary = outputDir.resolve("secondaryIndex.txt");
 
         PrepareRawData.prepare(inputDir, rawData);
         LocalFilter.filter(rawData, filtered);
+        PostingCore.build(filtered, postings);
         int docCount = countLines(rawData);
-        InvertedIndexCore.build(filtered, index, docCount);
+        RankIndexCore.build(postings, index, docCount);
         SecondaryIndexBuilder.build(index, secondary);
 
         System.out.println("[Done] local pipeline generated:");
         System.out.println(rawData);
         System.out.println(filtered);
+        System.out.println(postings);
         System.out.println(index);
         System.out.println(secondary);
     }

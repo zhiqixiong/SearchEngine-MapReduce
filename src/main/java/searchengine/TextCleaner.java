@@ -4,17 +4,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Shared tokenizer used by both indexing and querying.
+ *
+ * Job-1 keeps readable normalized tokens for summaries. Job-2 converts English
+ * tokens to Porter stems as index keys, so schedule/scheduling/scheduled can hit
+ * the same inverted-index entry. Chinese tokens are kept as lightweight bigrams.
+ */
 public class TextCleaner {
     private final StopWords stopWords;
+    private final PorterStemmer stemmer;
 
     public TextCleaner() {
-        this.stopWords = StopWords.loadDefaultOrFile("data/stopwords.txt");
+        this(StopWords.loadDefaultOrFile("data/stopwords.txt"));
     }
 
     public TextCleaner(StopWords stopWords) {
         this.stopWords = stopWords;
+        this.stemmer = new PorterStemmer();
     }
 
+    /** Clean text into readable tokens. These tokens are used for summaries. */
     public List<String> cleanAndTokenize(String text) {
         List<String> tokens = new ArrayList<>();
         if (text == null || text.isEmpty()) {
@@ -43,6 +53,25 @@ public class TextCleaner {
         return tokens;
     }
 
+    /** Convert one already-clean token to an index key. */
+    public String toIndexTerm(String token) {
+        if (token == null || token.isEmpty()) {
+            return "";
+        }
+        String normalized = token.toLowerCase(Locale.ROOT);
+        if (isAsciiEnglish(normalized)) {
+            if (normalized.length() < 2 || stopWords.contains(normalized)) {
+                return "";
+            }
+            String stemmed = stemmer.stem(normalized);
+            if (stemmed == null || stemmed.length() < 2 || stopWords.contains(stemmed)) {
+                return "";
+            }
+            return stemmed;
+        }
+        return normalized;
+    }
+
     private void flushEnglish(StringBuilder english, List<String> tokens) {
         if (english.length() < 2) {
             english.setLength(0);
@@ -65,11 +94,19 @@ public class TextCleaner {
             tokens.add(text);
             return;
         }
-        // Emit overlapping bigrams so Chinese queries such as “爬虫” or “数据” can hit.
-        // This is a lightweight alternative to Jieba and keeps the Java/Hadoop pipeline self-contained.
         for (int i = 0; i < text.length() - 1; i++) {
             tokens.add(text.substring(i, i + 2));
         }
+    }
+
+    private boolean isAsciiEnglish(String token) {
+        for (int i = 0; i < token.length(); i++) {
+            char ch = token.charAt(i);
+            if (ch < 'a' || ch > 'z') {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean isCjk(char ch) {
@@ -89,6 +126,6 @@ public class TextCleaner {
         if (tokens.isEmpty()) {
             return "";
         }
-        return tokens.get(0);
+        return toIndexTerm(tokens.get(0));
     }
 }

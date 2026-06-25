@@ -54,5 +54,9 @@ public class SearchEngineMain {
         System.err.println("  buildSecondary <indexFile> <secondaryIndexFile>");
         System.err.println("  shell <indexFile> <filteredFile> <topK>");
         System.err.println("  shell2 <indexFile> <secondaryFile> <filteredFile> <topK>");
+        System.err.println("Hadoop three-stage jobs:");
+        System.err.println("  hadoop jar search-engine.jar searchengine.FilterJob <rawDataInput> <filteredOutput>");
+        System.err.println("  hadoop jar search-engine.jar searchengine.PostingJob <filteredInput> <postingOutput>");
+        System.err.println("  hadoop jar search-engine.jar searchengine.RankAndSplitIndexJob <postingInput> <indexOutput> <docCount> [reducers]");
     }
 }
