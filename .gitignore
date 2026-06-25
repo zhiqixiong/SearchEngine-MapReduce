@@ -1,13 +1,10 @@
 target/
 output/
-logs/
-*.class
-*.jar
 *.log
-*.tmp
+*.class
+.DS_Store
 .idea/
 .vscode/
-.DS_Store
-__MACOSX/
-*.pyc
+*.iml
 __pycache__/
+*.pyc

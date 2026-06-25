@@ -1,0 +1,35 @@
+Hadoop
+Apache Hadoop
+MapReduce
+分布式文件系统
+搜索引擎
+网络爬虫
+倒排索引
+信息检索
+云计算
+虚拟化
+操作系统
+Linux
+Python
+Java
+数据库
+机器学习
+自然语言处理
+数据挖掘
+万维网
+超文本传输协议
+网页
+算法
+数据结构
+计算机网络
+人工智能
+开源软件
+应用程序接口
+JSON
+HTML
+JavaScript
+Apache Spark
+分布式计算
+大数据
+互联网
+软件工程

@@ -1,0 +1,34 @@
+Apache Hadoop
+MapReduce
+Distributed file system
+Search engine
+Web crawler
+Inverted index
+Information retrieval
+Cloud computing
+Virtualization
+Operating system
+Linux
+Python programming language
+Java programming language
+Database
+Machine learning
+Natural language processing
+Data mining
+World Wide Web
+Hypertext Transfer Protocol
+Web page
+Algorithm
+Data structure
+Computer network
+Artificial intelligence
+Open-source software
+Application programming interface
+JSON
+HTML
+JavaScript
+Apache Spark
+Distributed computing
+Big data
+Internet
+Software engineering

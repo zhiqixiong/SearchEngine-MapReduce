@@ -301,7 +301,8 @@ void search_help(void)
     printf("  sebuild [N]         build local index from crawler rawData\n");
     printf("  seshell [K]         start Java SearchShell, default K=10\n");
     printf("  sehadoop [N] [K]    fixed corpus + Hadoop 3-stage index jobs\n");
-    printf("  sewebbuild [N] [K]  generate self-host HTML corpus, crawl it, then build Hadoop index\n");
+    printf("  sewiki [N] [K]     crawl open wiki pages, then build Hadoop index\n");
+    printf("  sewebbuild [N] [K]  fallback: generate self-host HTML corpus, crawl it, then build Hadoop index\n");
     printf("  seweb [K] [PORT]    start Web search service, default PORT=8080\n");
     printf("  sefixed             build local index from fixed data/ostep corpus\n");
     printf("  seclean             clean generated outputs\n");
@@ -332,6 +333,10 @@ int rewrite_search_alias(char **argv)
     }
     if (!strcmp(argv[0], "sehadoop")) {
         argv[0] = "./scripts_myshell/run_hadoop_index.sh";
+        return 1;
+    }
+    if (!strcmp(argv[0], "sewiki")) {
+        argv[0] = "./scripts_myshell/build_wiki.sh";
         return 1;
     }
     if (!strcmp(argv[0], "sewebbuild")) {

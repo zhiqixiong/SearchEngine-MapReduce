@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-INDEX_DIR="${1:-output/crawler/hadoop}"
+INDEX_DIR="${1:-output/wiki/hadoop}"
 TOP_K="${2:-10}"
 PORT="${3:-8080}"
 JAR="target/search-engine-1.0.0.jar"
@@ -9,7 +9,7 @@ FILTERED_FILE="$INDEX_DIR/filteredSourceFile.txt"
 
 if [ ! -f "$INDEX_FILE" ] || [ ! -f "$FILTERED_FILE" ]; then
   echo "[Error] index files not found in $INDEX_DIR"
-  echo "Run scripts/run_web_corpus_master.sh first."
+  echo "Run scripts/run_wiki_master.sh, scripts/run_wiki_existing_master.sh, or scripts/run_web_corpus_master.sh first."
   exit 1
 fi
 
